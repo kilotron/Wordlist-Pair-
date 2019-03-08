@@ -6,10 +6,10 @@
 
 class Core {
 public:
-	static int gen_chain_word(const char* words[], int len, char* result[], char head, char tail, bool enable_loop);
-	static int gen_chain_char(const char* words[], int len, char* result[], char head, char tail, bool enable_loop);
+	static int gen_chain_word(char* words[], int len, char* result[], char head, char tail, bool enable_loop);
+	static int gen_chain_char(char* words[], int len, char* result[], char head, char tail, bool enable_loop);
 private:
-	static int gen_chain(const char* words[], int len, char* result[], char head, char tail, bool enable_loop, bool isWeighted);
+	static int gen_chain(char* words[], int len, char* result[], char head, char tail, bool enable_loop, bool isWeighted);
 };
 
 struct Node;
@@ -57,7 +57,7 @@ private:
 	std::vector<Path*>* AllPathsBetween(char start, char end);
 
 public:
-	WordGraph(const char *words[], int len);
+	WordGraph(char *words[], int len);
 	bool IsCyclic();
 	Path *LongestPathFrom(char start, bool isWeighted);
 	Path *LongestPathBetween(char start, char end, bool isWeighted);

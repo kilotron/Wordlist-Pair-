@@ -6,17 +6,17 @@
 
 using namespace std;
 
-int Core::gen_chain_word(const char* words[], int len, char* result[], char head, char tail, bool enable_loop)
+int Core::gen_chain_word(char* words[], int len, char* result[], char head, char tail, bool enable_loop)
 {
 	return gen_chain(words, len, result, head, tail, enable_loop, false);
 }
 
-int Core::gen_chain_char(const char* words[], int len, char* result[], char head, char tail, bool enable_loop)
+int Core::gen_chain_char(char* words[], int len, char* result[], char head, char tail, bool enable_loop)
 {
 	return gen_chain(words, len, result, head, tail, enable_loop, true);
 }
 
-int Core::gen_chain(const char * words[], int len, char * result[], char head,
+int Core::gen_chain(char * words[], int len, char * result[], char head,
 	char tail, bool enable_loop, bool isWeighted)
 {
 	WordGraph g(words, len);
@@ -129,7 +129,7 @@ void WordGraph::print() {
 	}
 }
 
-WordGraph::WordGraph(const char *words[], int len) {
+WordGraph::WordGraph(char *words[], int len) {
 	for (int i = 0; i < 26; i++) {
 		nodes[i] = new Node('a' + i, i);
 	}

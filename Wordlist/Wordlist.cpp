@@ -2,36 +2,52 @@
 //
 
 #include "pch.h"
-#include <iostream>
-#include <vector>
-#include <string>
-#include <stack>
+#include "Preprocess.h"
 #include <Windows.h>
 
 using namespace std;
 
-int main()
+int main(int argc, char *argv[])
 {
-	// DLL使用示例
-
-	typedef int (*p_gen_chain_word)(const char* words[], int len, char* result[], char head, char tail, bool enable_loop);
-	typedef int (*p_gen_chain_char)(const char* words[], int len, char* result[], char head, char tail, bool enable_loop);
+	typedef int (*p_gen_chain_word)(char* words[], int len, char* result[], char head, char tail, bool enable_loop);
+	typedef int (*p_gen_chain_char)(char* words[], int len, char* result[], char head, char tail, bool enable_loop);
 
 	HMODULE CoreDLL = LoadLibrary(L"..\\Debug\\Core.dll");
 
 	p_gen_chain_word gen_chain_word = p_gen_chain_word(GetProcAddress(CoreDLL, "gen_chain_word"));
-
-	int len = 5;
-	const char *words[] = {"ab", "bc", "ae", "ed", "dc"};
-	char **result = new char *[len];
+	p_gen_chain_char gen_chain_char = p_gen_chain_char(GetProcAddress(CoreDLL, "gen_chain_char"));
 	
-	int resultLen = gen_chain_word(words, len, result, 0, 0, false);
+	try
+	{
+		Preprocess pre;
+		pre.command(argc, argv);
 
-	for (int i = 0; i < resultLen; i++) {
-		cout << result[i] << endl;
+		set<string> stringSet = pre.readfile(pre.filename);
+
+		int length;
+		char **words = pre.change(stringSet, &length);
+
+		char **ans = new char *[length];
+		int anslen = 0;
+		bool loop = false;
+		if (pre.kind == RC || pre.kind == RW)
+			loop = true;
+		if (pre.kind == C || pre.kind == RC) {
+			anslen = gen_chain_word(words, length, ans, pre.head, pre.tail, loop);
+		}
+		else {
+			anslen = gen_chain_char(words, length, ans, pre.head, pre.tail, loop);
+		}
+
+		pre.write(ans, anslen);
 	}
-	
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what();
+	}
+
 	FreeLibrary(CoreDLL);
+
 	return 0;
 }
 
