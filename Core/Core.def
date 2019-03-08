@@ -1,0 +1,4 @@
+LIBRARY Core
+EXPORTS
+gen_chain_word
+gen_chain_char

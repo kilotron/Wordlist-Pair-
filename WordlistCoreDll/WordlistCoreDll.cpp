@@ -1,3 +1,7 @@
+﻿// WordlistCoreDll.cpp : 定义 DLL 应用程序的导出函数。
+//
+
+#include "stdafx.h"
 #include "Core.h"
 
 using namespace std;
@@ -74,7 +78,7 @@ void WordGraph::print() {
 		cout << "node " << c << " edges: \n";
 		for (unsigned int i = 0; i < n->edges.size(); i++) {
 			Edge *e = n->edges[i];
-			cout << "\tto " << e->to_node->letter << ", word: " << *(e->word) 
+			cout << "\tto " << e->to_node->letter << ", word: " << *(e->word)
 				<< ", weight: " << e->weight << endl;
 		}
 	}
@@ -269,7 +273,7 @@ int Core::gen_chain(const char * words[], int len, char * result[], char head,
 	}
 
 	int wordCount = path->WordCount();
-	for (unsigned int i = 0; i < wordCount; i++) {
+	for (int i = 0; i < wordCount; i++) {
 		string *word = path->words[i];
 		result[i] = new char[word->length() + 1];
 		strcpy_s(result[i], word->length() + 1, word->data());

@@ -38,7 +38,7 @@ public:
 class WordGraph {
 private:
 	enum NodeStatus { NotExplored, BeingExplored, FullyExplored };
-	
+
 	bool isCyclic;
 	Node *nodes[26]; // array
 
