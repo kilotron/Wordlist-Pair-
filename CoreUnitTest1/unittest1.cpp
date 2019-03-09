@@ -400,5 +400,21 @@ namespace CoreUnitTest1
 			GEN_CHAIN_CHAR('l', 'l', true);
 			ASSERT_RESULT_LEN(0);
 		}
+
+		// 只有一个单词，自环
+		TEST_METHOD(TestMethod6)
+		{
+			TEST_INIT(1, "i");
+			GEN_CHAIN_CHAR(0, 0, true);
+			ASSERT_RESULT_LEN(0);
+		}
+
+		// 只有一个单词
+		TEST_METHOD(TestMethod7)
+		{
+			TEST_INIT(1, "look");
+			GEN_CHAIN_CHAR(0, 'k', true);
+			ASSERT_RESULT_LEN(0);
+		}
 	};
 }

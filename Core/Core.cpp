@@ -42,7 +42,7 @@ int Core::gen_chain(char * words[], int len, char * result[], char head,
 		throw exception("Illegal parameter.");
 	}
 
-	if (path == nullptr) {
+	if (path == nullptr || path->WordCount() < 2) {
 		return 0;
 	}
 
