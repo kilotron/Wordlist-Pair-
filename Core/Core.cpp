@@ -42,6 +42,10 @@ int Core::gen_chain(char * words[], int len, char * result[], char head,
 		throw exception("Illegal parameter.");
 	}
 
+	if (path == nullptr) {
+		return 0;
+	}
+
 	int wordCount = path->WordCount();
 	for (int i = 0; i < wordCount; i++) {
 		string *word = path->words[i];
