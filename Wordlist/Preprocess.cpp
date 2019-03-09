@@ -40,7 +40,7 @@ set<string> Preprocess::readfile(char *filename) {
 
 void Preprocess::command(int argc, char *argv[]) {
 	if (argc - 1 <= 0) {
-		//throw "命令使用请指定相应参数";
+		throw exception("命令使用请指定相应参数");
 	}
 	int i = 1;
 	bool wflag = false, rflag = false, cflag = false;

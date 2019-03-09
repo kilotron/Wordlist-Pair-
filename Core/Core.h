@@ -36,7 +36,6 @@ public:
 	std::vector<std::string *> words;
 
 	Path(char start, char end);
-	std::string *ToString();
 	int WordCount();
 	int CharLength();
 	int Length(bool isWeighted);
@@ -48,6 +47,7 @@ private:
 
 	bool isCyclic;
 	Node *nodes[26]; // array
+	int num_edges;
 
 	Node *GetNode(char letter);
 	void DetectCycle();
@@ -55,6 +55,8 @@ private:
 
 	void DFSPathFind(char start, char end, std::vector<Edge*>& edgeStack, std::vector<Path*>& paths);
 	std::vector<Path*>* AllPathsBetween(char start, char end);
+
+	void LongestPathBetweenDFS(char start, char end, std::vector<Edge*>& edgeStack, int &maxLen, Path **longestPath, bool isWeighted);
 
 public:
 	WordGraph(char *words[], int len);

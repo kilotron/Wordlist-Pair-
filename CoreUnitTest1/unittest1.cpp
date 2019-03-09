@@ -416,5 +416,15 @@ namespace CoreUnitTest1
 			GEN_CHAIN_CHAR(0, 'k', true);
 			ASSERT_RESULT_LEN(0);
 		}
+
+		// 字母最长的路径上只有一个单词
+		TEST_METHOD(TestMethod8)
+		{
+			TEST_INIT(3, "ab", "bd", "axxxyyyd");
+			GEN_CHAIN_CHAR(0, 0, false);
+			ASSERT_RESULT_LEN(2);
+			ASSERT_RESULT("ab", 0);
+			ASSERT_RESULT("bd", 1);
+		}
 	};
 }
