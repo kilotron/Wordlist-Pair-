@@ -31,11 +31,8 @@ struct Node {
 
 class Path {
 public:
-	char start;
-	char end;
 	std::vector<std::string *> words;
-
-	Path(char start, char end);
+	Path(int capacity);
 	int WordCount();
 	int CharLength();
 	int Length(bool isWeighted);
@@ -53,10 +50,8 @@ private:
 	void DetectCycle();
 	void DFS(int node_idx, int visited[]);
 
-	void DFSPathFind(char start, char end, std::vector<Edge*>& edgeStack, std::vector<Path*>& paths);
-	std::vector<Path*>* AllPathsBetween(char start, char end);
-
 	void LongestPathBetweenDFS(char start, char end, std::vector<Edge*>& edgeStack, int &maxLen, Path **longestPath, bool isWeighted);
+	void LongestPathFromDFS(char start, std::vector<Edge*>& edgeStack, int & maxLen, Path ** longestPath, bool isWeighted);
 
 public:
 	WordGraph(char *words[], int len);
@@ -65,6 +60,5 @@ public:
 	Path *LongestPathBetween(char start, char end, bool isWeighted);
 	Path *LongestPathTo(char end, bool isWeighted);
 	Path *LongestPath(bool isWeighted);
-	void print(); // debug;
 };
 

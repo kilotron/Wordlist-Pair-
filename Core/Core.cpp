@@ -85,9 +85,8 @@ Node::Node(char letter, int node_idx) {
 	this->node_idx = node_idx;
 }
 
-Path::Path(char start, char end) {
-	this->start = start;
-	this->end = end;
+Path::Path(int capacity) {
+	words.reserve(capacity);
 }
 
 int Path::CharLength() {
@@ -104,18 +103,6 @@ int Path::WordCount() {
 
 int Path::Length(bool isWeighted) {
 	return isWeighted ? CharLength() : WordCount();
-}
-
-void WordGraph::print() {
-	for (char c = 'a'; c < 'z'; c++) {
-		Node *n = nodes[c - 'a'];
-		cout << "node " << c << " edges: \n";
-		for (unsigned int i = 0; i < n->edges.size(); i++) {
-			Edge *e = n->edges[i];
-			cout << "\tto " << e->to_node->letter << ", word: " << *(e->word)
-				<< ", weight: " << e->weight << endl;
-		}
-	}
 }
 
 WordGraph::WordGraph(char *words[], int len) {
@@ -169,41 +156,6 @@ Node *WordGraph::GetNode(char letter) {
 	return nodes[letter - 'a'];
 }
 
-
-/* This is a helper function for AllPathsBetween().*/
-void WordGraph::DFSPathFind(char start, char end, vector<Edge *> &edgeStack, vector<Path *> &paths) {
-	Node *startNode = GetNode(start);
-	for (unsigned int i = 0; i < startNode->edges.size(); i++) {
-		Edge *edge = startNode->edges[i];
-		if (!edge->visited) {
-			edge->visited = true;
-			edgeStack.push_back(edge);
-			DFSPathFind(edge->to_node->letter, end, edgeStack, paths);
-			edge->visited = false;
-			edgeStack.pop_back();
-		}
-	}
-
-	if (start == end) {
-		if (edgeStack.size() < 2) {
-			return;
-		}
-		Path *path = new Path(edgeStack[0]->word->at(0), end);
-		for (unsigned int i = 0; i < edgeStack.size(); i++) {
-			path->words.push_back(edgeStack[i]->word);
-		}
-		paths.push_back(path);
-	}
-}
-
-/* Returns a vector containing all the paths from start to end.*/
-vector<Path *> *WordGraph::AllPathsBetween(char start, char end) {
-	vector<Edge *> edgeStack;
-	vector<Path *> *paths = new vector<Path *>();
-	DFSPathFind(start, end, edgeStack, *paths);
-	return paths;
-}
-
 void WordGraph::LongestPathBetweenDFS(char start, char end, vector<Edge*>& edgeStack, int &maxLen, Path **longestPath, bool isWeighted)
 {
 	Node *startNode = GetNode(start);
@@ -222,7 +174,7 @@ void WordGraph::LongestPathBetweenDFS(char start, char end, vector<Edge*>& edgeS
 		if (edgeStack.size() < 2) {
 			return;
 		}
-		Path *path = new Path(edgeStack[0]->word->at(0), end);
+		Path *path = new Path(this->num_edges);
 		for (unsigned int i = 0; i < edgeStack.size(); i++) {
 			path->words.push_back(edgeStack[i]->word);
 		}
@@ -246,34 +198,51 @@ void WordGraph::LongestPathBetweenDFS(char start, char end, vector<Edge*>& edgeS
 /* Returns a longest path which begins with `start` and ends with `end`.
    Returns null if there is no path between start and end.
    The length of a path is the number of characters along the path
-   if isWeighted is set true, otherwise it will be the number of words.
+   if isWeighted is set true, otherwise it will be the number of words. */
 Path *WordGraph::LongestPathBetween(char start, char end, bool isWeighted) {
-	vector<Path *> *paths = AllPathsBetween(start, end);
+	vector<Edge*> edgeStack;
+	edgeStack.reserve(this->num_edges);
+	int maxLen = 0;
 	Path *longestPath = nullptr;
-	int maxLength = 0;
-	for (unsigned int i = 0; i < paths->size(); i++) {
-		Path *path = (*paths)[i];
-		if (path->Length(isWeighted) > maxLength) {
-			if (longestPath != nullptr) {
-				delete longestPath;
-			}
-			maxLength = path->Length(isWeighted);
-			longestPath = path;
+	LongestPathBetweenDFS(start, end, edgeStack, maxLen, &longestPath, isWeighted);
+	return longestPath;
+}
+
+void WordGraph::LongestPathFromDFS(char start, vector<Edge*>& edgeStack, int &maxLen, Path **longestPath, bool isWeighted)
+{
+	Node *startNode = GetNode(start);
+	for (unsigned int i = 0; i < startNode->edges.size(); i++) {
+		Edge *edge = startNode->edges[i];
+		if (!edge->visited) {
+			edge->visited = true;
+			edgeStack.push_back(edge);
+			LongestPathFromDFS(edge->to_node->letter, edgeStack, maxLen, longestPath, isWeighted);
+			edge->visited = false;
+			edgeStack.pop_back();
+		}
+	}
+
+	if (edgeStack.size() < 2) {
+		return;
+	}
+	Path *path = new Path(this->num_edges);
+	for (unsigned int i = 0; i < edgeStack.size(); i++) {
+		path->words.push_back(edgeStack[i]->word);
+	}
+	if (*longestPath == nullptr) {
+		*longestPath = path;
+		maxLen = path->Length(isWeighted);
+	}
+	else {
+		if (path->Length(isWeighted) > maxLen) {
+			delete *longestPath;
+			maxLen = path->Length(isWeighted);
+			*longestPath = path;
 		}
 		else {
 			delete path;
 		}
 	}
-	delete paths;
-	return longestPath;
-}*/
-
-Path *WordGraph::LongestPathBetween(char start, char end, bool isWeighted) {
-	vector<Edge*> edgeStack(this->num_edges);
-	int maxLen = 0;
-	Path *longestPath = nullptr;
-	LongestPathBetweenDFS(start, end, edgeStack, maxLen, &longestPath, isWeighted);
-	return longestPath;
 }
 
 /* Returns a longest path which begins with letter `start`.
@@ -281,24 +250,11 @@ Path *WordGraph::LongestPathBetween(char start, char end, bool isWeighted) {
    The length of a path is the number of characters along the path
    if isWeighted is set true, otherwise it will be the number of words.*/
 Path *WordGraph::LongestPathFrom(char start, bool isWeighted) {
-	int maxLength = 0;
+	vector<Edge*> edgeStack;
+	edgeStack.reserve(this->num_edges);
+	int maxLen = 0;
 	Path *longestPath = nullptr;
-	for (char c = 'a'; c <= 'z'; c++) {
-		Path *path = LongestPathBetween(start, c, isWeighted);
-		if (path == nullptr) {
-			continue;
-		}
-		if (path->Length(isWeighted) > maxLength) {
-			if (longestPath != nullptr) {
-				delete longestPath;
-			}
-			maxLength = path->Length(isWeighted);
-			longestPath = path;
-		}
-		else {
-			delete path;
-		}
-	}
+	LongestPathFromDFS(start, edgeStack, maxLen, &longestPath, isWeighted);
 	return longestPath;
 }
 
@@ -337,21 +293,19 @@ Path * WordGraph::LongestPath(bool isWeighted)
 	Path *longestPath = nullptr;
 
 	for (char start = 'a'; start <= 'z'; start++) {
-		for (char end = 'a'; end <= 'z'; end++) {
-			Path *path = LongestPathBetween(start, end, isWeighted);
-			if (path == nullptr) {
-				continue;
+		Path *path = LongestPathFrom(start, isWeighted);
+		if (path == nullptr) {
+			continue;
+		}
+		if (path->Length(isWeighted) > maxLength) {
+			if (longestPath != nullptr) {
+				delete longestPath;
 			}
-			if (path->Length(isWeighted) > maxLength) {
-				if (longestPath != nullptr) {
-					delete longestPath;
-				}
-				maxLength = path->Length(isWeighted);
-				longestPath = path;
-			}
-			else {
-				delete path;
-			}
+			maxLength = path->Length(isWeighted);
+			longestPath = path;
+		}
+		else {
+			delete path;
 		}
 	}
 
@@ -361,5 +315,3 @@ Path * WordGraph::LongestPath(bool isWeighted)
 bool WordGraph::IsCyclic() {
 	return this->isCyclic;
 }
-
-

@@ -4,7 +4,7 @@
 #include "pch.h"
 #include "Preprocess.h"
 #include <Windows.h>
-
+#include <vector>
 using namespace std;
 
 int main(int argc, char *argv[])
