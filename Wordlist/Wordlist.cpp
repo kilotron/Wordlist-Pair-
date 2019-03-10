@@ -14,8 +14,18 @@ int main(int argc, char *argv[])
 
 	HMODULE CoreDLL = LoadLibrary(L"..\\BIN\\Core.dll");
 
+	if (CoreDLL == nullptr) {
+		cerr << "未找到Core.dll" << endl;
+		return -1;
+	}
+
 	p_gen_chain_word gen_chain_word = p_gen_chain_word(GetProcAddress(CoreDLL, "gen_chain_word"));
 	p_gen_chain_char gen_chain_char = p_gen_chain_char(GetProcAddress(CoreDLL, "gen_chain_char"));
+
+	if (gen_chain_char == nullptr || gen_chain_word == nullptr) {
+		cerr << "无效的Core.dll" << endl;
+		return -1;
+	}
 	
 	try
 	{
