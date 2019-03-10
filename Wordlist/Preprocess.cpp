@@ -50,7 +50,7 @@ void Preprocess::command(int argc, char *argv[]) {
 		if (strcmp(argv[i], "-h") == 0) {
 			char *alpha = argv[++i];
 			if (strlen(alpha) != 1 || !isalpha(*alpha)) {
-				throw exception("-h命令后应该接单个字符");
+				throw exception("-h命令后应该接单个字母");
 			}
 			else {
 				*alpha = tolower(*alpha);
@@ -60,7 +60,7 @@ void Preprocess::command(int argc, char *argv[]) {
 		else if (strcmp(argv[i], "-t") == 0) {
 			char *alpha = argv[++i];
 			if (strlen(alpha) != 1 || !isalpha(*alpha)) {
-				throw exception("-t命令后应该接单个字符");
+				throw exception("-t命令后应该接单个字母");
 			}
 			else {
 				*alpha = tolower(*alpha);
