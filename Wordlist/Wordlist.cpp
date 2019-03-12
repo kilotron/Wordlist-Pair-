@@ -43,10 +43,10 @@ int main(int argc, char *argv[])
 		if (pre.kind == RC || pre.kind == RW)
 			loop = true;
 		if (pre.kind == C || pre.kind == RC) {
-			anslen = gen_chain_word(words, length, ans, pre.head, pre.tail, loop);
+			anslen = gen_chain_char(words, length, ans, pre.head, pre.tail, loop);
 		}
 		else {
-			anslen = gen_chain_char(words, length, ans, pre.head, pre.tail, loop);
+			anslen = gen_chain_word(words, length, ans, pre.head, pre.tail, loop);
 		}
 
 		pre.write(ans, anslen);
