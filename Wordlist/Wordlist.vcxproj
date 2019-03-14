@@ -165,6 +165,11 @@
     <ClCompile Include="Preprocess.cpp" />
     <ClCompile Include="Wordlist.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{3acf96b6-8acb-4aa5-9226-22851a584de4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
