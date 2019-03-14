@@ -291,3 +291,6 @@ __pycache__/
 *.exe
 *.out
 *.app
+
+*.vcxproj
+*.vcxproj.filters
