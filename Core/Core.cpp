@@ -75,7 +75,7 @@ string *ToLowerCase(string str) {
 
 Edge::Edge(std::string * word, Node * to_node) {
 	this->word = word;
-	this->weight = int(this->word->length());
+	this->weight = -int(this->word->length());
 	this->to_node = to_node;
 	this->visited = false;
 }
@@ -83,7 +83,6 @@ Edge::Edge(std::string * word, Node * to_node) {
 Node::Node(char letter, int node_idx) {
 	this->letter = letter;
 	this->node_idx = node_idx;
-	this->indegree = 0;
 }
 
 Path::Path(int capacity) {
@@ -108,26 +107,24 @@ int Path::Length(bool isWeighted) {
 
 WordGraph::WordGraph(char *words[], int len) {
 	this->num_edges = len;
-	this->isWeightedGraph = true;
-	for (int i = 0; i < NUM_NODES; i++) {
+	for (int i = 0; i < 26; i++) {
 		nodes[i] = new Node('a' + i, i);
 	}
 	for (int i = 0; i < len; i++) {
 		string *word = ToLowerCase(words[i]);
-		/*
+		bool existDuplicate = false;
 		for (int j = 0; j < i; j++) {
 			if (words[j] == *word) {
-				throw exception("Duplicate words.");
+				existDuplicate = true;
+				break;
 			}
-		}*/
+		}
+		if (existDuplicate) {
+			continue;
+		}
 		char start = (*word)[0];
 		char end = (*word)[(*word).length() - 1];
-		GetNode(start)->edges.push_back(new Edge(word, GetNode(end)));
-		
-		// a self-loop is ignored (for topo sort)
-		if (start != end) {
-			GetNode(end)->indegree++;
-		}
+		nodes[start - 'a']->edges.push_back(new Edge(word, nodes[end - 'a']));
 	}
 	DetectCycle();
 }
@@ -135,9 +132,9 @@ WordGraph::WordGraph(char *words[], int len) {
 void WordGraph::DetectCycle() {
 	isCyclic = false;
 
-	for (int i = 0; i < NUM_NODES && !this->isCyclic; i++) {
-		int status[NUM_NODES];
-		for (int i = 0; i < NUM_NODES; i++) {
+	for (int i = 0; i < 26 && !this->isCyclic; i++) {
+		int status[26];
+		for (int i = 0; i < 26; i++) {
 			status[i] = NotExplored;
 		}
 		DFS(i, status);
@@ -158,52 +155,6 @@ void WordGraph::DFS(int node_idx, int status[]) {
 		}
 	}
 	status[node_idx] = FullyExplored;
-}
-
-void WordGraph::TopoSort(vector<Node *> &result)
-{
-	//vector<Node *> *result = new vector<Node *>();
-	vector<Node *> zeroIndegreeNodes;
-	int origIndegree[NUM_NODES];
-
-	zeroIndegreeNodes.reserve(NUM_NODES);
-	result.reserve(NUM_NODES);
-
-	// push nodes whose indegree is 0 into zeroIndegreeNodes
-	for (int i = 0; i < NUM_NODES; i++) {
-		if (this->nodes[i]->indegree == 0) {
-			zeroIndegreeNodes.push_back(nodes[i]);
-		}
-		origIndegree[i] = nodes[i]->indegree;
-	}
-
-	// topo sort
-	for (int i = 0; i < NUM_NODES; i++) {
-		if (zeroIndegreeNodes.size() == 0) {
-			break;
-		}
-		Node *node = zeroIndegreeNodes.back();
-		zeroIndegreeNodes.pop_back();
-		result.push_back(node);
-		for (unsigned int i = 0; i < node->edges.size(); i++) {
-			Node *adjNode = node->edges[i]->to_node;
-			// ignore self-loop
-			if (adjNode == node) {
-				continue;
-			}
-			adjNode->indegree--;
-			if (adjNode->indegree == 0) {
-				zeroIndegreeNodes.push_back(adjNode);
-			}
-		}
-	}
-
-	// recover modified indegree.
-	for (int i = 0; i < NUM_NODES; i++) {
-		nodes[i]->indegree = origIndegree[i];
-	}
-
-	//return result;
 }
 
 Node *WordGraph::GetNode(char letter) {
@@ -249,7 +200,11 @@ void WordGraph::LongestPathBetweenDFS(char start, char end, vector<Edge*>& edgeS
 	}
 }
 
-Path *WordGraph::LongestPathBetweenCyclicOrAcyclic(char start, char end, bool isWeighted) {
+/* Returns a longest path which begins with `start` and ends with `end`.
+   Returns null if there is no path between start and end.
+   The length of a path is the number of characters along the path
+   if isWeighted is set true, otherwise it will be the number of words. */
+Path *WordGraph::LongestPathBetween(char start, char end, bool isWeighted) {
 	vector<Edge*> edgeStack;
 	edgeStack.reserve(this->num_edges);
 	int maxLen = 0;
@@ -295,180 +250,17 @@ void WordGraph::LongestPathFromDFS(char start, vector<Edge*>& edgeStack, int &ma
 	}
 }
 
-Path *WordGraph::LongestPathFromCyclicOrAcyclic(char start, bool isWeighted) {
+/* Returns a longest path which begins with letter `start`.
+   Returns null if there is no path beginning with `start`.
+   The length of a path is the number of characters along the path
+   if isWeighted is set true, otherwise it will be the number of words.*/
+Path *WordGraph::LongestPathFrom(char start, bool isWeighted) {
 	vector<Edge*> edgeStack;
 	edgeStack.reserve(this->num_edges);
 	int maxLen = 0;
 	Path *longestPath = nullptr;
 	LongestPathFromDFS(start, edgeStack, maxLen, &longestPath, isWeighted);
 	return longestPath;
-}
-
-// the following functions are for acyclic case
-
-void WordGraph::SetWeight(bool isWeighted)
-{
-	if (this->isWeightedGraph == isWeighted) {
-		return;
-	}
-	if (isWeighted) {
-		for (int i = 0; i < NUM_NODES; i++) {
-			Node *node = nodes[i];
-			for (unsigned int j = 0; j < node->edges.size(); j++) {
-				Edge *edge = node->edges[j];
-				edge->weight = edge->word->length();
-			}
-		}
-	}
-	else {
-		for (int i = 0; i < NUM_NODES; i++) {
-			Node *node = nodes[i];
-			for (unsigned int j = 0; j < node->edges.size(); j++) {
-				Edge *edge = node->edges[j];
-				edge->weight = 1;
-			}
-		}
-	}
-}
-
-void WordGraph::MarkLongestPathFromAcyclic(char start)
-{
-	vector<Node *> sortedNodes;
-
-	TopoSort(sortedNodes);
-
-	for (int i = 0; i < NUM_NODES; i++) {
-		nodes[i]->dist = INT_MIN;
-		nodes[i]->edgeToThis = nullptr;
-		nodes[i]->pred = nullptr;
-		nodes[i]->selfLoop = false;
-		nodes[i]->selfLoopEdge = nullptr;
-	}
-
-	GetNode(start)->dist = 0;
-
-	// process nodes in topological order
-	for (unsigned int i = 0; i < sortedNodes.size(); i++) {
-		Node *node = sortedNodes.at(i);
-		if (node->dist == INT_MIN) {
-			continue;
-		}
-
-		// process self-loop first, condition: weight of self-loop > 0
-		//Edge *selfLoopEdge = nullptr;
-		for (unsigned int j = 0; j < node->edges.size(); j++) {
-			Edge *edge = node->edges[j];
-			if (node != edge->to_node) {
-				continue;
-			}
-			if (node->selfLoopEdge == nullptr || node->selfLoopEdge->weight < edge->weight) {
-				node->selfLoopEdge = edge;
-				node->selfLoop = true;
-			}
-		}
-		if (node->selfLoop) {
-			node->dist += node->selfLoopEdge->weight;
-		}
-
-		// process rest of the adjNodes
-		for (unsigned int j = 0; j < node->edges.size(); j++) {
-			Edge *edge = node->edges[j];
-			Node *adjNode = edge->to_node;
-			if (node == edge->to_node) {
-				continue;
-			}
-			if (adjNode->dist < node->dist + edge->weight) {
-				adjNode->dist = node->dist + edge->weight;
-				adjNode->edgeToThis = edge;
-				adjNode->pred = node;
-			}
-		}
-	}
-}
-
-Path *WordGraph::ConstructPath(Node * node)
-{
-	vector<string *> tmp;
-	while (node != nullptr) {
-		if (node->selfLoop) {
-			tmp.push_back(node->selfLoopEdge->word);
-		}
-		if (node->edgeToThis != nullptr) {
-			tmp.push_back(node->edgeToThis->word);
-		}
-		node = node->pred;
-	}
-
-	Path *path = new Path(tmp.size());
-	for (int i = tmp.size() - 1; i >= 0; i--) {
-		path->words.push_back(tmp[i]);
-	}
-	return path;
-}
-
-Path * WordGraph::LongestPathFromAcyclic(char start, bool isWeighted)
-{
-	SetWeight(isWeighted);
-	
-	MarkLongestPathFromAcyclic(start);
-
-	// construct path
-	Node *longestNode = nullptr;
-	int maxLength = 0;
-	for (int i = 0; i < NUM_NODES; i++) {
-		if (nodes[i]->dist > maxLength) {
-			longestNode = nodes[i];
-			maxLength = nodes[i]->dist;
-		}
-	}
-	Path *path = ConstructPath(longestNode);
-
-	// 特殊情况，边界测试第8个
-	if (path->WordCount() < 2) {
-		return LongestPathFromCyclicOrAcyclic(start, isWeighted);
-	}
-	return path;
-}
-
-Path * WordGraph::LongestPathBetweenAcyclic(char start, char end, bool isWeighted)
-{
-	SetWeight(isWeighted);
-
-	MarkLongestPathFromAcyclic(start);
-
-	Path *path = ConstructPath(GetNode(end));
-
-	// 特殊情况，边界测试第8个
-	if (path->WordCount() < 2) {
-		return LongestPathBetweenCyclicOrAcyclic(start, end, isWeighted);
-	}
-	return path;
-}
-
-/* Returns a longest path which begins with `start` and ends with `end`.
-   Returns null if there is no path between start and end.
-   The length of a path is the number of characters along the path
-   if isWeighted is set true, otherwise it will be the number of words. */
-Path *WordGraph::LongestPathBetween(char start, char end, bool isWeighted) {
-	if (this->isCyclic) {
-		return LongestPathBetweenCyclicOrAcyclic(start, end, isWeighted);
-	}
-	else {
-		return LongestPathBetweenAcyclic(start, end, isWeighted);
-	}
-}
-
-/* Returns a longest path which begins with letter `start`.
-   Returns null if there is no path beginning with `start`.
-   The length of a path is the number of characters along the path
-   if isWeighted is set true, otherwise it will be the number of words.*/
-Path *WordGraph::LongestPathFrom(char start, bool isWeighted) {
-	if (this->isCyclic) {
-		return LongestPathFromCyclicOrAcyclic(start, isWeighted);
-	}
-	else {
-		return LongestPathFromAcyclic(start, isWeighted);
-	}
 }
 
 /* Returns a longest path which ends with `end`. Returns null if no path is found.
